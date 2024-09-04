@@ -11,7 +11,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let currentCity = "";
 
-  // Get the user's location or use a default city
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(
       (position) => {
@@ -19,11 +18,11 @@ document.addEventListener("DOMContentLoaded", () => {
         getWeatherDataByCoords(latitude, longitude);
       },
       () => {
-        getWeatherDataByCity("Kyiv"); // Default city if geolocation fails
+        getWeatherDataByCity("Kyiv");
       }
     );
   } else {
-    getWeatherDataByCity("Kyiv"); // Default city if geolocation is not supported
+    getWeatherDataByCity("Kyiv");
   }
 
   searchInput.addEventListener("keypress", (event) => {
@@ -54,8 +53,8 @@ document.addEventListener("DOMContentLoaded", () => {
         displayTodayWeather(data);
         getFiveDayForecast(currentCity);
       })
-      .catch((error) => {
-        console.error("Error fetching weather data:", error);
+      .catch(() => {
+        showErrorPage();
       });
   }
 
@@ -68,8 +67,7 @@ document.addEventListener("DOMContentLoaded", () => {
         displayTodayWeather(data);
         getFiveDayForecast(currentCity);
       })
-      .catch((error) => {
-        console.error("Error fetching weather data:", error);
+      .catch(() => {
         showErrorPage();
       });
   }
@@ -80,14 +78,13 @@ document.addEventListener("DOMContentLoaded", () => {
       .then((data) => {
         displayFiveDayForecast(data);
       })
-      .catch((error) => {
-        console.error("Error fetching forecast data:", error);
+      .catch(() => {
+        showErrorPage();
       });
   }
 
   function getNearbyPlaces(lat, lon) {
-    // Placeholder URL; replace with actual API if available
-    const radius = 5000; // Radius in meters
+    const radius = 5000;
     const nearbyPlacesApiUrl = `https://api.example.com/nearby?lat=${lat}&lon=${lon}&radius=${radius}`;
 
     fetch(nearbyPlacesApiUrl)
@@ -95,9 +92,7 @@ document.addEventListener("DOMContentLoaded", () => {
       .then((data) => {
         displayNearbyPlaces(data);
       })
-      .catch((error) => {
-        console.error("Error fetching nearby places:", error);
-        // Fallback to simulated data
+      .catch(() => {
         displayNearbyPlacesSimulated();
       });
   }
@@ -111,126 +106,135 @@ document.addEventListener("DOMContentLoaded", () => {
     const weatherCondition = data.weather[0].main.toLowerCase();
 
     todayContent.innerHTML = `
-            <div class="weather-summary">
-                <div class="date">${today.toLocaleDateString()}</div>
-                <div class="weather-icon ${getIconClass(weatherCondition)}">
-                    <img src="http://openweathermap.org/img/wn/${
-                      data.weather[0].icon
-                    }@2x.png" alt="Weather icon">
-                </div>
-                <div class="weather-details">
-                    <div class="temperature">${Math.round(
-                      data.main.temp
-                    )}°C</div>
-                    <div class="description">${
-                      data.weather[0].description
-                    }</div>
-                    <div class="real-feel">Real Feel: ${Math.round(
-                      data.main.feels_like
-                    )}°C</div>
-                    <div class="sunrise">Sunrise: ${sunrise}</div>
-                    <div class="sunset">Sunset: ${sunset}</div>
-                    <div class="day-length">Day Length: ${dayLength}</div>
-                </div>
-            </div>
-            <div class="hourly-forecast">
-                <h3>Hourly Forecast</h3>
-                <div class="hourly-forecast-details">
-                    <!-- Hourly forecast will be appended here -->
-                </div>
-            </div>
-            <div class="nearby-cities">
-                <h3>Nearby Places</h3>
-                <div class="nearby-cities-list">
-                    <!-- Nearby cities will be appended here -->
-                </div>
-            </div>
-        `;
-
-    getNearbyPlaces(data.coord.lat, data.coord.lon);
+      <div class="weather-summary">
+        <div class="date">${today.toLocaleDateString()}</div>
+        <div class="weather-icon ${getIconClass(weatherCondition)}">
+          <img src="http://openweathermap.org/img/wn/${
+            data.weather[0].icon
+          }@2x.png" alt="${data.weather[0].description}">
+        </div>
+        <div class="temperature">${Math.round(data.main.temp)}°C</div>
+        <div class="weather-description">${data.weather[0].description}</div>
+        <div class="sunrise">Sunrise: ${sunrise}</div>
+        <div class="sunset">Sunset: ${sunset}</div>
+        <div class="day-length">Day Length: ${dayLength}</div>
+      </div>
+    `;
   }
 
-  function getIconClass(condition) {
-    switch (condition) {
-      case "clouds":
-        return "cloudy";
-      case "clear":
-        return "sunny";
-      case "rain":
-        return "rainy";
-      case "snow":
-        return "snowy";
-      default:
-        return "";
-    }
+  function calculateDayLength(sunrise, sunset) {
+    const sunriseTime = new Date(`1970-01-01T${sunrise}Z`);
+    const sunsetTime = new Date(`1970-01-01T${sunset}Z`);
+    const dayLength = sunsetTime - sunriseTime;
+    const hours = Math.floor(dayLength / 3600000);
+    const minutes = Math.floor((dayLength % 3600000) / 60000);
+    return `${hours}h ${minutes}m`;
   }
 
   function displayFiveDayForecast(data) {
-    const shortForecast = document.getElementById("shortForecast");
-    shortForecast.innerHTML = data.list
-      .filter((item, index) => index % 8 === 0) // Get the data for each day
-      .map(
-        (item) => `
-                <div class="day-summary" data-date="${item.dt_txt}">
-                    <div class="day">${new Date(
-                      item.dt * 1000
-                    ).toLocaleDateString()}</div>
-                    <div class="weather-icon ${getIconClass(
-                      item.weather[0].main.toLowerCase()
-                    )}">
-                        <img src="http://openweathermap.org/img/wn/${
-                          item.weather[0].icon
-                        }@2x.png" alt="Weather icon">
-                    </div>
-                    <div class="temperature">${Math.round(
-                      item.main.temp
-                    )}°C</div>
-                </div>
-            `
-      )
-      .join("");
+    const forecast = data.list;
+    let shortForecastHTML = "";
+    let hourlyForecastHTML = "";
 
-    // Add event listeners to each day summary
-    document
-      .querySelectorAll("#shortForecast .day-summary")
-      .forEach((element) => {
-        element.addEventListener("click", (event) => {
-          const date = event.currentTarget.getAttribute("data-date");
-          displayDetailedForecast(date);
+    forecast.forEach((item, index) => {
+      if (index % 8 === 0) {
+        const date = new Date(item.dt * 1000);
+        const day = date.toLocaleDateString("en-US", { weekday: "long" });
+        const weatherCondition = item.weather[0].main.toLowerCase();
+
+        shortForecastHTML += `
+          <div class="day-summary" onclick="showHourlyForecast(${index})">
+            <div class="date">${day}</div>
+            <div class="weather-icon ${getIconClass(weatherCondition)}">
+              <img src="http://openweathermap.org/img/wn/${
+                item.weather[0].icon
+              }@2x.png" alt="${item.weather[0].description}">
+            </div>
+            <div class="temperature">${Math.round(item.main.temp)}°C</div>
+            <div class="weather-description">${
+              item.weather[0].description
+            }</div>
+          </div>
+        `;
+      }
+    });
+
+    document.getElementById("shortForecast").innerHTML = shortForecastHTML;
+
+    function showHourlyForecast(index) {
+      const dayForecast = forecast.slice(index, index + 8);
+      hourlyForecastHTML = "";
+
+      dayForecast.forEach((item) => {
+        const time = new Date(item.dt * 1000).toLocaleTimeString([], {
+          hour: "2-digit",
+          minute: "2-digit",
         });
+        hourlyForecastHTML += `
+          <div class="hourly-forecast-item">
+            <div class="hour">${time}</div>
+            <div class="temperature">${Math.round(item.main.temp)}°C</div>
+            <div class="weather-icon ${getIconClass(
+              item.weather[0].main.toLowerCase()
+            )}">
+              <img src="http://openweathermap.org/img/wn/${
+                item.weather[0].icon
+              }@2x.png" alt="${item.weather[0].description}">
+            </div>
+            <div class="weather-description">${
+              item.weather[0].description
+            }</div>
+          </div>
+        `;
       });
-  }
 
-  function displayDetailedForecast(date) {
-    // Placeholder: Implement detailed forecast logic
+      document.getElementById("detailedForecast").innerHTML =
+        hourlyForecastHTML;
+    }
   }
 
   function displayNearbyPlaces(data) {
-    const nearbyCitiesList = document.querySelector(".nearby-cities-list");
-    nearbyCitiesList.innerHTML = data.results
+    const placesHTML = data.results
       .map(
         (place) => `
-                <div class="nearby-city-item">
-                    <div class="city">${place.name}</div>
-                    <div class="distance">${place.distance} km</div>
-                </div>
-            `
+      <div class="nearby-city-item">
+        <div class="name">${place.name}</div>
+        <div class="distance">${place.distance} meters away</div>
+      </div>
+    `
       )
       .join("");
+
+    document.querySelector(".nearby-cities").innerHTML = `
+      <h3>Nearby Places:</h3>
+      <div class="nearby-cities-list">
+        ${placesHTML}
+      </div>
+    `;
   }
 
   function displayNearbyPlacesSimulated() {
-    const nearbyCitiesList = document.querySelector(".nearby-cities-list");
-    nearbyCitiesList.innerHTML = `
-            <div class="nearby-city-item">
-                <div class="city">Simulated Place 1</div>
-                <div class="distance">2 km</div>
-            </div>
-            <div class="nearby-city-item">
-                <div class="city">Simulated Place 2</div>
-                <div class="distance">5 km</div>
-            </div>
-        `;
+    const simulatedData = [
+      { name: "Place 1", distance: "100" },
+      { name: "Place 2", distance: "500" },
+      { name: "Place 3", distance: "1000" },
+    ];
+
+    displayNearbyPlaces(simulatedData);
+  }
+
+  function showTodayTab() {
+    todayTab.classList.add("active");
+    forecastTab.classList.remove("active");
+    todayContent.classList.add("active");
+    forecastContent.classList.remove("active");
+  }
+
+  function showForecastTab() {
+    todayTab.classList.remove("active");
+    forecastTab.classList.add("active");
+    todayContent.classList.remove("active");
+    forecastContent.classList.add("active");
   }
 
   function showErrorPage() {
@@ -239,30 +243,18 @@ document.addEventListener("DOMContentLoaded", () => {
     forecastContent.style.display = "none";
   }
 
-  function showTodayTab() {
-    todayTab.classList.add("active");
-    forecastTab.classList.remove("active");
-    todayContent.style.display = "block";
-    forecastContent.style.display = "none";
-    document.getElementById("errorSection").style.display = "none";
-  }
-
-  function showForecastTab() {
-    todayTab.classList.remove("active");
-    forecastTab.classList.add("active");
-    todayContent.style.display = "none";
-    forecastContent.style.display = "block";
-    document.getElementById("errorSection").style.display = "none";
-  }
-
-  function calculateDayLength(sunrise, sunset) {
-    const sunriseTime = new Date(`1970-01-01T${sunrise}Z`).getTime();
-    const sunsetTime = new Date(`1970-01-01T${sunset}Z`).getTime();
-    const dayLengthInMs = sunsetTime - sunriseTime;
-    const hours = Math.floor(dayLengthInMs / (1000 * 60 * 60));
-    const minutes = Math.floor(
-      (dayLengthInMs % (1000 * 60 * 60)) / (1000 * 60)
-    );
-    return `${hours}h ${minutes}m`;
+  function getIconClass(weatherCondition) {
+    switch (weatherCondition) {
+      case "clear":
+        return "sunny";
+      case "clouds":
+        return "cloudy";
+      case "rain":
+        return "rainy";
+      case "snow":
+        return "snowy";
+      default:
+        return "";
+    }
   }
 });

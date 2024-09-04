@@ -2,7 +2,7 @@ body {
     font-family: Arial, sans-serif;
     margin: 0;
     padding: 0;
-    background: #f5f5f5;
+    background: #f0f4f8;
     color: #333;
 }
 
@@ -37,6 +37,11 @@ nav button {
     font-size: 16px;
     border-radius: 5px;
     margin: 0 5px;
+    transition: background-color 0.3s;
+}
+
+nav button:hover {
+    background-color: #555;
 }
 
 nav button.active {
@@ -88,6 +93,11 @@ section.active {
     margin: 5px;
     flex: 1;
     max-width: calc(50% - 10px);
+    transition: background-color 0.3s, border-color 0.3s;
+}
+
+#shortForecast .day-summary:hover {
+    background-color: #f1f1f1;
 }
 
 #shortForecast .day-summary.selected {
@@ -109,38 +119,18 @@ section.active {
 
 .weather-icon.sunny img {
     background-color: #FFEB3B;
-    
-    border-radius: 50%;
-    padding: 15px;
-    box-shadow: 0 0 10px rgba(255, 251, 1, 0.2);
-    
 }
 
 .weather-icon.cloudy img {
-    background-color: #333;
-    
-    border-radius: 50%;
-    padding: 15px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
-    
+    background-color: #B0BEC5;
 }
 
 .weather-icon.rainy img {
-    background-color: #e0e0e0;
-    
-    border-radius: 50%;
-    padding: 15px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-    
+    background-color: #90A4AE;
 }
 
 .weather-icon.snowy img {
-    background-color: #f0f0f0;
-    
-    border-radius: 50%;
-    padding: 15px;
-    box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
-    
+    background-color: #CFD8DC;
 }
 
 .weather-details,
@@ -157,4 +147,27 @@ section.active {
 .hourly-forecast-item .hour {
     font-weight: bold;
     margin-right: 10px;
+}
+
+.nearby-cities {
+    margin-top: 20px;
+}
+
+.nearby-cities h3 {
+    margin: 0 0 10px;
+}
+
+.nearby-cities-list {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.nearby-city-item {
+    flex: 1;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    margin: 5px;
+    background-color: #fff;
+    text-align: center;
 }
