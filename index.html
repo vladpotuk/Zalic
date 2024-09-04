@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Weather</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header>
+      <h1>My Weather</h1>
+      <input type="text" id="cityInput" placeholder="Enter city name..." />
+    </header>
+    <nav>
+      <button id="todayTab" class="active">Today</button>
+      <button id="forecastTab">5-day forecast</button>
+    </nav>
+    <main>
+      <section id="todaySection" class="active">
+        <!-- Today’s weather information will be loaded here -->
+      </section>
+      <section id="forecastSection">
+        <div id="shortForecast">
+          <!-- Short 5-day forecast blocks will be loaded here -->
+        </div>
+        <div id="detailedForecast">
+          <!-- Hourly forecast for the selected day will be loaded here -->
+        </div>
+      </section>
+      <div id="errorSection">
+        <!-- Error message when a city is not found will be shown here -->
+        <p>
+          404 -
+          <span id="errorMessage"
+            >City not found. Please enter a different location.</span
+          >
+        </p>
+      </div>
+    </main>
+    <script src="script.js"></script>
+  </body>
+</html>
