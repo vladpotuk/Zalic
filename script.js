@@ -11,6 +11,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let currentCity = "";
 
+  // Try to get user's location or default to Kyiv
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(
       (position) => {
@@ -25,6 +26,7 @@ document.addEventListener("DOMContentLoaded", () => {
     getWeatherDataByCity("Kyiv");
   }
 
+  // Handle search input and fetch weather data for the city
   searchInput.addEventListener("keypress", (event) => {
     if (event.key === "Enter") {
       const city = searchInput.value.trim();
@@ -34,6 +36,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
+  // Switch between tabs
   todayTab.addEventListener("click", () => {
     showTodayTab();
   });
@@ -42,6 +45,7 @@ document.addEventListener("DOMContentLoaded", () => {
     showForecastTab();
   });
 
+  // Fetch weather data by coordinates
   function getWeatherDataByCoords(lat, lon) {
     fetch(
       `${weatherApiUrl}weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=${units}`
@@ -58,6 +62,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
   }
 
+  // Fetch weather data by city name
   function getWeatherDataByCity(city) {
     fetch(`${weatherApiUrl}weather?q=${city}&appid=${apiKey}&units=${units}`)
       .then((response) => response.json())
@@ -72,6 +77,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
   }
 
+  // Fetch 5-day weather forecast
   function getFiveDayForecast(city) {
     fetch(`${weatherApiUrl}forecast?q=${city}&appid=${apiKey}&units=${units}`)
       .then((response) => response.json())
@@ -83,20 +89,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
   }
 
-  function getNearbyPlaces(lat, lon) {
-    const radius = 5000;
-    const nearbyPlacesApiUrl = `https://api.example.com/nearby?lat=${lat}&lon=${lon}&radius=${radius}`;
-
-    fetch(nearbyPlacesApiUrl)
-      .then((response) => response.json())
-      .then((data) => {
-        displayNearbyPlaces(data);
-      })
-      .catch(() => {
-        displayNearbyPlacesSimulated();
-      });
-  }
-
+  // Display current weather
   function displayTodayWeather(data) {
     const today = new Date();
     const sunrise = new Date(data.sys.sunrise * 1000).toLocaleTimeString();
@@ -107,6 +100,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     todayContent.innerHTML = `
       <div class="weather-summary">
+        <div class="city-name">${data.name}</div>
         <div class="date">${today.toLocaleDateString()}</div>
         <div class="weather-icon ${getIconClass(weatherCondition)}">
           <img src="http://openweathermap.org/img/wn/${
@@ -122,127 +116,54 @@ document.addEventListener("DOMContentLoaded", () => {
     `;
   }
 
-  function calculateDayLength(sunrise, sunset) {
-    const sunriseTime = new Date(`1970-01-01T${sunrise}Z`);
-    const sunsetTime = new Date(`1970-01-01T${sunset}Z`);
-    const dayLength = sunsetTime - sunriseTime;
-    const hours = Math.floor(dayLength / 3600000);
-    const minutes = Math.floor((dayLength % 3600000) / 60000);
-    return `${hours}h ${minutes}m`;
-  }
-
+  // Display 5-day forecast
   function displayFiveDayForecast(data) {
-    const forecast = data.list;
-    let shortForecastHTML = "";
-    let hourlyForecastHTML = "";
+    const forecastContainer = document.getElementById("shortForecast");
+    forecastContainer.innerHTML = `<h2 class="city-name">${currentCity}</h2>`; // Add city name here
 
-    forecast.forEach((item, index) => {
-      if (index % 8 === 0) {
-        const date = new Date(item.dt * 1000);
-        const day = date.toLocaleDateString("en-US", { weekday: "long" });
-        const weatherCondition = item.weather[0].main.toLowerCase();
+    const dailyData = {};
 
-        shortForecastHTML += `
-          <div class="day-summary" onclick="showHourlyForecast(${index})">
-            <div class="date">${day}</div>
-            <div class="weather-icon ${getIconClass(weatherCondition)}">
-              <img src="http://openweathermap.org/img/wn/${
-                item.weather[0].icon
-              }@2x.png" alt="${item.weather[0].description}">
-            </div>
-            <div class="temperature">${Math.round(item.main.temp)}°C</div>
-            <div class="weather-description">${
-              item.weather[0].description
-            }</div>
-          </div>
-        `;
+    data.list.forEach((entry) => {
+      const date = entry.dt_txt.split(" ")[0];
+      if (!dailyData[date]) {
+        dailyData[date] = entry;
       }
     });
 
-    document.getElementById("shortForecast").innerHTML = shortForecastHTML;
+    for (let date in dailyData) {
+      const entry = dailyData[date];
+      const weatherCondition = entry.weather[0].main.toLowerCase();
+      const temp = Math.round(entry.main.temp);
 
-    function showHourlyForecast(index) {
-      const dayForecast = forecast.slice(index, index + 8);
-      hourlyForecastHTML = "";
+      const dayElement = document.createElement("div");
+      dayElement.classList.add("day-summary");
+      dayElement.innerHTML = `
+        <div class="date">${new Date(date).toLocaleDateString()}</div>
+        <div class="weather-icon ${getIconClass(weatherCondition)}">
+          <img src="http://openweathermap.org/img/wn/${
+            entry.weather[0].icon
+          }@2x.png" alt="${entry.weather[0].description}">
+        </div>
+        <div class="temperature">${temp}°C</div>
+        <div class="weather-description">${entry.weather[0].description}</div>
+      `;
 
-      dayForecast.forEach((item) => {
-        const time = new Date(item.dt * 1000).toLocaleTimeString([], {
-          hour: "2-digit",
-          minute: "2-digit",
-        });
-        hourlyForecastHTML += `
-          <div class="hourly-forecast-item">
-            <div class="hour">${time}</div>
-            <div class="temperature">${Math.round(item.main.temp)}°C</div>
-            <div class="weather-icon ${getIconClass(
-              item.weather[0].main.toLowerCase()
-            )}">
-              <img src="http://openweathermap.org/img/wn/${
-                item.weather[0].icon
-              }@2x.png" alt="${item.weather[0].description}">
-            </div>
-            <div class="weather-description">${
-              item.weather[0].description
-            }</div>
-          </div>
-        `;
-      });
-
-      document.getElementById("detailedForecast").innerHTML =
-        hourlyForecastHTML;
+      forecastContainer.appendChild(dayElement);
     }
   }
 
-  function displayNearbyPlaces(data) {
-    const placesHTML = data.results
-      .map(
-        (place) => `
-      <div class="nearby-city-item">
-        <div class="name">${place.name}</div>
-        <div class="distance">${place.distance} meters away</div>
-      </div>
-    `
-      )
-      .join("");
+  // Calculate day length
+  function calculateDayLength(sunrise, sunset) {
+    const [sunriseHour, sunriseMinute] = sunrise.split(":").map(Number);
+    const [sunsetHour, sunsetMinute] = sunset.split(":").map(Number);
 
-    document.querySelector(".nearby-cities").innerHTML = `
-      <h3>Nearby Places:</h3>
-      <div class="nearby-cities-list">
-        ${placesHTML}
-      </div>
-    `;
+    const hourDiff = sunsetHour - sunriseHour;
+    const minuteDiff = sunsetMinute - sunriseMinute;
+
+    return `${hourDiff}h ${minuteDiff}m`;
   }
 
-  function displayNearbyPlacesSimulated() {
-    const simulatedData = [
-      { name: "Place 1", distance: "100" },
-      { name: "Place 2", distance: "500" },
-      { name: "Place 3", distance: "1000" },
-    ];
-
-    displayNearbyPlaces(simulatedData);
-  }
-
-  function showTodayTab() {
-    todayTab.classList.add("active");
-    forecastTab.classList.remove("active");
-    todayContent.classList.add("active");
-    forecastContent.classList.remove("active");
-  }
-
-  function showForecastTab() {
-    todayTab.classList.remove("active");
-    forecastTab.classList.add("active");
-    todayContent.classList.remove("active");
-    forecastContent.classList.add("active");
-  }
-
-  function showErrorPage() {
-    document.getElementById("errorSection").style.display = "block";
-    todayContent.style.display = "none";
-    forecastContent.style.display = "none";
-  }
-
+  // Get weather icon class based on condition
   function getIconClass(weatherCondition) {
     switch (weatherCondition) {
       case "clear":
@@ -256,5 +177,28 @@ document.addEventListener("DOMContentLoaded", () => {
       default:
         return "";
     }
+  }
+
+  // Show today's weather tab
+  function showTodayTab() {
+    todayTab.classList.add("active");
+    forecastTab.classList.remove("active");
+    todayContent.classList.add("active");
+    forecastContent.classList.remove("active");
+    document.getElementById("errorSection").style.display = "none";
+  }
+
+  // Show forecast tab
+  function showForecastTab() {
+    forecastTab.classList.add("active");
+    todayTab.classList.remove("active");
+    forecastContent.classList.add("active");
+    todayContent.classList.remove("active");
+    document.getElementById("errorSection").style.display = "none";
+  }
+
+  // Show error page
+  function showErrorPage() {
+    document.getElementById("errorSection").style.display = "block";
   }
 });
