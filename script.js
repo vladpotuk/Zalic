@@ -11,7 +11,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   let currentCity = "";
 
-  // Try to get user's location or default to Kyiv
   if (navigator.geolocation) {
     navigator.geolocation.getCurrentPosition(
       (position) => {
@@ -26,7 +25,6 @@ document.addEventListener("DOMContentLoaded", () => {
     getWeatherDataByCity("Kyiv");
   }
 
-  // Handle search input and fetch weather data for the city
   searchInput.addEventListener("keypress", (event) => {
     if (event.key === "Enter") {
       const city = searchInput.value.trim();
@@ -36,7 +34,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Switch between tabs
   todayTab.addEventListener("click", () => {
     showTodayTab();
   });
@@ -45,7 +42,6 @@ document.addEventListener("DOMContentLoaded", () => {
     showForecastTab();
   });
 
-  // Fetch weather data by coordinates
   function getWeatherDataByCoords(lat, lon) {
     fetch(
       `${weatherApiUrl}weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=${units}`
@@ -62,7 +58,6 @@ document.addEventListener("DOMContentLoaded", () => {
       });
   }
 
-  // Fetch weather data by city name
   function getWeatherDataByCity(city) {
     fetch(`${weatherApiUrl}weather?q=${city}&appid=${apiKey}&units=${units}`)
       .then((response) => response.json())
@@ -77,7 +72,6 @@ document.addEventListener("DOMContentLoaded", () => {
       });
   }
 
-  // Fetch 5-day weather forecast
   function getFiveDayForecast(city) {
     fetch(`${weatherApiUrl}forecast?q=${city}&appid=${apiKey}&units=${units}`)
       .then((response) => response.json())
@@ -89,37 +83,30 @@ document.addEventListener("DOMContentLoaded", () => {
       });
   }
 
-  // Display current weather
   function displayTodayWeather(data) {
-    const today = new Date();
-    const sunrise = new Date(data.sys.sunrise * 1000).toLocaleTimeString();
-    const sunset = new Date(data.sys.sunset * 1000).toLocaleTimeString();
-    const dayLength = calculateDayLength(sunrise, sunset);
-
-    const weatherCondition = data.weather[0].main.toLowerCase();
-
     todayContent.innerHTML = `
+      <h2 class="city-name">${data.name}</h2>
       <div class="weather-summary">
-        <div class="city-name">${data.name}</div>
-        <div class="date">${today.toLocaleDateString()}</div>
-        <div class="weather-icon ${getIconClass(weatherCondition)}">
+        <div class="weather-icon ${getIconClass(
+          data.weather[0].main.toLowerCase()
+        )}">
           <img src="http://openweathermap.org/img/wn/${
             data.weather[0].icon
           }@2x.png" alt="${data.weather[0].description}">
         </div>
         <div class="temperature">${Math.round(data.main.temp)}°C</div>
         <div class="weather-description">${data.weather[0].description}</div>
-        <div class="sunrise">Sunrise: ${sunrise}</div>
-        <div class="sunset">Sunset: ${sunset}</div>
-        <div class="day-length">Day Length: ${dayLength}</div>
+        <div class="weather-details">
+          <div>Humidity: ${data.main.humidity}%</div>
+          <div>Wind Speed: ${Math.round(data.wind.speed)} m/s</div>
+        </div>
       </div>
     `;
   }
 
-  // Display 5-day forecast
   function displayFiveDayForecast(data) {
     const forecastContainer = document.getElementById("shortForecast");
-    forecastContainer.innerHTML = `<h2 class="city-name">${currentCity}</h2>`; // Add city name here
+    forecastContainer.innerHTML = `<h2 class="city-name">${currentCity}</h2>`;
 
     const dailyData = {};
 
@@ -152,20 +139,8 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Calculate day length
-  function calculateDayLength(sunrise, sunset) {
-    const [sunriseHour, sunriseMinute] = sunrise.split(":").map(Number);
-    const [sunsetHour, sunsetMinute] = sunset.split(":").map(Number);
-
-    const hourDiff = sunsetHour - sunriseHour;
-    const minuteDiff = sunsetMinute - sunriseMinute;
-
-    return `${hourDiff}h ${minuteDiff}m`;
-  }
-
-  // Get weather icon class based on condition
-  function getIconClass(weatherCondition) {
-    switch (weatherCondition) {
+  function getIconClass(condition) {
+    switch (condition) {
       case "clear":
         return "sunny";
       case "clouds":
@@ -179,7 +154,6 @@ document.addEventListener("DOMContentLoaded", () => {
     }
   }
 
-  // Show today's weather tab
   function showTodayTab() {
     todayTab.classList.add("active");
     forecastTab.classList.remove("active");
@@ -188,17 +162,17 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById("errorSection").style.display = "none";
   }
 
-  // Show forecast tab
   function showForecastTab() {
-    forecastTab.classList.add("active");
     todayTab.classList.remove("active");
-    forecastContent.classList.add("active");
+    forecastTab.classList.add("active");
     todayContent.classList.remove("active");
+    forecastContent.classList.add("active");
     document.getElementById("errorSection").style.display = "none";
   }
 
-  // Show error page
   function showErrorPage() {
+    todayContent.innerHTML = "";
+    forecastContent.innerHTML = "";
     document.getElementById("errorSection").style.display = "block";
   }
 });

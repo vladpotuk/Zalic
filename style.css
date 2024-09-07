@@ -93,28 +93,30 @@ section.active {
     margin: 20px auto;
 }
 
-#shortForecast {
+.forecast-container {
     display: flex;
-    justify-content: space-around;
-    flex-wrap: wrap;
+    overflow-x: auto;
+    
+    padding: 10px;
+    gap: 10px;
+    
 }
 
-#shortForecast .day-summary {
-    cursor: pointer;
-    padding: 20px;
-    border: 2px solid #ddd;
-    border-radius: 15px;
+.day-summary {
+    flex: 0 0 auto;
+    
+    width: 150px;
+    
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    padding: 10px;
     text-align: center;
-    background-color: #fff;
-    margin: 10px;
-    flex: 1;
-    max-width: calc(50% - 20px);
-    transition: background-color 0.3s, border-color 0.3s, transform 0.2s;
 }
 
-#shortForecast .day-summary:hover {
-    background-color: #f1f1f1;
-    transform: scale(1.05);
+.weather-icon img {
+    width: 50px;
+    /* Size of the weather icon */
+    height: auto;
 }
 
 .weather-summary img {
@@ -124,12 +126,6 @@ section.active {
     padding: 15px;
     background-color: #e0f7fa;
     box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
-}
-
-.weather-summary .city-name {
-    font-size: 24px;
-    font-weight: bold;
-    margin-bottom: 10px;
 }
 
 .weather-icon.sunny img {
@@ -146,4 +142,54 @@ section.active {
 
 .weather-icon.snowy img {
     background-color: #CFD8DC;
+}
+
+.weather-details {
+    margin-top: 15px;
+}
+
+.hourly-forecast-item {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+    background-color: #e0f7fa;
+    border-radius: 10px;
+    padding: 10px;
+}
+
+.hourly-forecast-item .hour {
+    font-weight: bold;
+    margin-right: 20px;
+    font-size: 18px;
+}
+
+.nearby-cities {
+    margin-top: 20px;
+    color: #333;
+}
+
+.nearby-cities h3 {
+    margin: 0 0 15px;
+    color: #1E88E5;
+}
+
+.nearby-cities-list {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.nearby-city-item {
+    flex: 1;
+    padding: 15px;
+    border: 2px solid #ddd;
+    border-radius: 15px;
+    margin: 10px;
+    background-color: #fff;
+    text-align: center;
+    transition: box-shadow 0.3s, transform 0.2s;
+}
+
+.nearby-city-item:hover {
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    transform: scale(1.05);
 }
